@@ -1,0 +1,22 @@
+{
+  "mirko": {
+    "password": "psw",
+    "isLogged": false
+  },
+  "francesco": {
+    "password": "psw",
+    "isLogged": false
+  },
+  "andrea": {
+    "password": "psw",
+    "isLogged": false
+  },
+  "sara": {
+    "password": "psw",
+    "isLogged": false
+  },
+  "teresa": {
+    "password": "psw",
+    "isLogged": false
+  }
+}
