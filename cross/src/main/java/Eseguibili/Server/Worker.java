@@ -133,7 +133,6 @@ public class Worker implements Runnable {
                         
                         // Estrazione dell'operazione
                         String operation = obj.get("operation").getAsString();
-        
                         JsonObject valuesObj;
 
                         // Creazione del tipo di valore appropriato in base all'operazione
@@ -377,7 +376,7 @@ public class Worker implements Runnable {
                                     // Aggiornamento del file orderBook.json
                                     updateJsonOrderBook(orderBook);
 
-                                    // Incio del messaggio al client con l'orderID
+                                    // Inizio del messaggio al client con l'orderID
                                     responseOrder.setResponseOrder(orderID);
                                     responseOrder.sendMessage(gson,out);
                                 } catch (Exception e){
@@ -434,7 +433,7 @@ public class Worker implements Runnable {
                                 orderBook.stopOrders.add(new StopValue(type,size,onlineUser,orderID,price));
 
                                 // Si controlla se ci sono ordini da eseguire
-                                //orderBook.checkStopOrders(socketMap);
+                                orderBook.checkStopOrders(socketMap);
                                                                 
                                 // Aggiornamento della lista degli stopOrder del TimeoutHandler
                                 handler.updateStopOrders(orderBook.stopOrders);
@@ -522,24 +521,23 @@ public class Worker implements Runnable {
                             default:
                                 System.out.println("[Worker] Comando ricevuto non trovato");
                         } // Fine switch
+
                     } catch (SocketTimeoutException e){
                         // readLine() è scaduto, si verifica se il TimeoutHandler ha segnalato un timeout
                         if(!sharedState.activeUser.get()){
                             break;
                         }
                         // Altrimenti si continua il ciclo
-                        continue;
+                        //continue;
                     }
                 }
                 // Procedura di terminazione del worker
-
                 System.out.printf("[WORKER %s] Uscito dal while principale\n", Thread.currentThread().getName());
                 // Terminazione del thread handler
                 sharedState.runningHandler.set(false);
                 System.out.printf("[WORKER %s] Attendendo terminazione timeout handler...\n", Thread.currentThread().getName());
                 timeout.join(); // Si attende la terminazione del TimeoutHandler
                 System.out.printf("[WORKER %s] Timeout handler terminato\n", Thread.currentThread().getName());
-              
               
                 String closingMessage = "";
                 if(!sharedState.activeUser.get()) // Inattività del client
@@ -598,13 +596,6 @@ public class Worker implements Runnable {
         }
 
     }
-        
-  
-    /*Metodo per chiudere il worker
-    public void shutdown(){
-        running.set(false);
-    }*/
-
     //Metodo per chiudere il worker
     public void shutdown(){
         running.set(false);

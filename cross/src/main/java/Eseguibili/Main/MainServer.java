@@ -46,7 +46,6 @@ public class MainServer {
         readConfig();
         try{
             serverSocket = new ServerSocket(TCPport);
-
             // Viene associato un handler per gestire la terminazione con CTRL+C
             Runtime.getRuntime().addShutdownHook(new Thread(){
                 public void run(){
