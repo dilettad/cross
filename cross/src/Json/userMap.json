@@ -1,22 +1,46 @@
 {
-  "mirko": {
+  "Cate": {
+    "password": "ciaoo",
+    "isLogged": false
+  },
+  "Rita": {
+    "password": "ciaoo",
+    "isLogged": false
+  },
+  "daria": {
+    "password": "ciao",
+    "isLogged": false
+  },
+  "matteo": {
     "password": "psw",
     "isLogged": false
   },
-  "francesco": {
-    "password": "psw",
+  "Francesco": {
+    "password": "ino",
     "isLogged": false
   },
-  "andrea": {
-    "password": "psw",
+  "Erne": {
+    "password": "Ciao",
     "isLogged": false
   },
-  "sara": {
-    "password": "psw",
+  "Paola": {
+    "password": "ciaooo",
     "isLogged": false
   },
-  "teresa": {
-    "password": "psw",
+  "Fragolina": {
+    "password": "fragolina",
+    "isLogged": false
+  },
+  "Tommaso": {
+    "password": "Ciao",
+    "isLogged": false
+  },
+  "diletta": {
+    "password": "Ciao",
+    "isLogged": false
+  },
+  "fede": {
+    "password": "ciao",
     "isLogged": false
   }
 }

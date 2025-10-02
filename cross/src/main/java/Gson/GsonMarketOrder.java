@@ -1,4 +1,5 @@
 package Gson;
+//Classe usata per passare al server i dati per inserire un marketOrder
 public class GsonMarketOrder extends Values {
     public String type;
     public int size;

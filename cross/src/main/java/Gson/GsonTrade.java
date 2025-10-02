@@ -1,5 +1,6 @@
 package Gson;
 
+//Classe usata per leggere le transazioni dal file contenente lo storico degli ordini
 public class GsonTrade {
     private int orderId;
     private String type;

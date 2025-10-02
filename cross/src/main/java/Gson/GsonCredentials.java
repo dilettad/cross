@@ -1,4 +1,6 @@
 package Gson;
+
+//Classe per passare al server i dati per il cambio password
 public class GsonCredentials extends Values{
     public String username;
     public String old_password;

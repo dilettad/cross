@@ -27,20 +27,10 @@ public class OrderBook {
         this.stopOrders = stopOrders;
         updateOrderBook();
     }
-        
-    /*Metodo notifica all'utente sullo stato dell'ordine tramite UDP con parametri;
-        socketMap: Mappa degli utenti connessi e delle relative informazioni socket
-        user: nome utente da notificare
-        orderID: ID dell'ordine da notificare
-        type: tipo di ordine (bid/ask)
-        orderType: tipo di ordine (limit/market/stop)
-        size: dimensione dell'ordine
-        price: prezzo dell'ordine
-        */
 
 
     public void notifyUser(ConcurrentSkipListMap<String, SockMapValue> socketMap, String user, int orderID, String type, String orderType, int size, int price) {
-        System.out.println("Notifying user: " + user + " about order ID: " + orderID + ", Type: " + type + ", Order Type: " + orderType + ", Size: " + size + ", Price: " + price);
+        System.out.println("Notifica all'utente " + user + " riguardo l'ordine " + orderID + ", di tipo: " + type + ", Tipo d'ordine: " + orderType + ", Dimensione: " + size + ", Prezzo: " + price);
         
         // Estrazione delle informazioni socket dell'utente
         SockMapValue socketInfo = socketMap.get(user);
@@ -60,28 +50,13 @@ public class OrderBook {
                 sock.send(packet);
 
             } catch (Exception e){
-                System.err.println("NotifyUser() Error: " + e.getMessage());
+                System.err.println("NotifyUser() Errore: " + e.getMessage());
             }
         } else {
-            System.out.println("User not online, message not sent.");
+            System.out.println("Utente non online, messaggio non inviato.");
         }
     }
 
-    // VERSIONE LEGACY PER Map<String, String> (se necessaria per compatibilità)
-    public void notifyUser(Map<String, String> socketMap, String user, int orderID, String type, String orderType, int size, int price) {
-        System.out.println("Notifying user: " + user + " about order ID: " + orderID + ", Type: " + type + ", Order Type: " + orderType + ", Size: " + size + ", Price: " + price);
-        System.out.println("Warning: Using legacy socketMap format - UDP notification may not work correctly");
-        
-        // Implementazione semplificata per compatibilità - potrebbe non funzionare correttamente
-        String socketInfo = socketMap.get(user);
-        if(socketInfo != null) {
-            System.out.println("Found user in legacy socketMap: " + socketInfo);
-            // Qui dovresti implementare la logica per parsare le informazioni socket dal formato String
-        } else {
-            System.out.println("User not found in legacy socketMap.");
-        }
-    }
-    
     // Metodo per restituire gli username presenti nella lista degli utenti
     public ConcurrentLinkedQueue<String> getUsers(ConcurrentLinkedQueue<UserBook> list) {
         ConcurrentLinkedQueue<String> users = new ConcurrentLinkedQueue<>();
@@ -123,9 +98,9 @@ public class OrderBook {
                 lastOrderID--; // già assegnato in insertStopOrder()
 
                 if (res != -1) {
-                    System.out.printf("%s's StopOrder processed successfully. Order: %s\n", order.username, order);
+                    System.out.printf("%s's StopOrder elaborato con successo. Ordine: %s\n", order.username, order);
                 } else {
-                    System.out.printf("%s's StopOrder was processed but failed. Order: %s\n", order.username, order);
+                    System.out.printf("%s's StopOrder è stato elaborato, ma non è andato a buon fine. Ordine: %s\n", order.username, order);
                     notifyUser(socketMap, order.username, order.orderID, order.type, "stop", 0, 0);
                 }
 
@@ -200,20 +175,20 @@ public class OrderBook {
                 }
 
                 if (remainingSize == 0) { //Ordine completato
-                    System.out.println("Order number " + orderID + " fully matched.");
+                    System.out.println("Numero d'ordine " + orderID + " completato.");
                     updateOrderBook();
                     return orderID;
                 }
             }
         }
         
-        // CORRETTO: Questo blocco ora è fuori dal for loop
+    
         if (remainingSize > 0) {
             loadBidOrder(remainingSize, price, user, orderID);
             if (remainingSize == size) {
-                System.out.println("Order number " + orderID + " unmatched: " + remainingSize + " placed in the orderBook");
+                System.out.println("Numero d'ordine " + orderID + " non corrispondente: " + remainingSize + " aggiunto all'orderBook");
             } else {
-                System.out.println("Order number " + orderID + " was partially completed; the remaining size of " + remainingSize + " was added to the orderBook");
+                System.out.println("Numero d'ordine " + orderID + " è stato parzialmente completato; la dimensione rimanente di " + remainingSize + " è stata aggiunta all'orderBook");
             }
         }
         updateOrderBook();
@@ -239,7 +214,7 @@ public class OrderBook {
         }
     }
            
-    // CORRETTO IL VALORE DI RITORNO E IL FLUSSO DI CONTROLLO
+    
     public synchronized int tryAskOrder(int size, int price, String user, ConcurrentSkipListMap<String, SockMapValue> socketMap) {
         int remainingSize = size;
         int orderID = updateLastOrderID();
@@ -269,20 +244,19 @@ public class OrderBook {
                 }
 
                 if (remainingSize == 0) { //Ordine completato
-                    System.out.println("Order number " + orderID + " fully matched.");
+                    System.out.println("Numero d'ordine " + orderID + " completato.");
                     updateOrderBook();
-                    return orderID; // CORRETTO: Restituisce orderID invece di 0
+                    return orderID; 
                 }
             }
         }
         
-        // CORRETTO: Questo blocco ora è fuori dal for loop
         if (remainingSize > 0) {
             loadAskOrder(remainingSize, price, user, orderID);
             if (remainingSize == size) {
-                System.out.println("Order number " + orderID + " unmatched: " + remainingSize + " placed in the orderBook");
+                System.out.println("Numero d'ordine " + orderID + " non corrispondente: " + remainingSize + " inserito all'orderBook");
             } else {
-                System.out.println("Order number " + orderID + " was partially completed; the remaining size of " + remainingSize + " was added to the orderBook");
+                System.out.println("Numero d'ordine " + orderID + " è stato parzialmente completato; la dimensione rimanente di " + remainingSize + " è stata aggiunta all'orderBook");
             }
         }
         updateOrderBook();
@@ -336,7 +310,7 @@ public class OrderBook {
                     if (bookValue.userList.isEmpty()) {
                         askMap.remove(entry.getKey());
                     }
-                    System.out.println("Order " + orderID + " cancelled successfully.");
+                    System.out.println("Ordine " + orderID + " cancellato con successo.");
                     return 100;
                 }
             }
@@ -354,7 +328,7 @@ public class OrderBook {
                     if (bookValue.userList.isEmpty()) {
                         bidMap.remove(entry.getKey());
                     }
-                    System.out.println("Order " + orderID + " cancelled successfully.");
+                    System.out.println("Ordine " + orderID + " cancellato con successo.");
                     return 100;
                 }
             }
@@ -363,11 +337,11 @@ public class OrderBook {
         //Controllo degli stopOrders
         Iterator<StopValue> iterator = stopOrders.iterator();
         while (iterator.hasNext()) {
-            StopValue stopOrder = iterator.next(); // CORRETTO: rinominato da 'user' a 'stopOrder'
+            StopValue stopOrder = iterator.next(); 
             if (stopOrder.orderID == orderID && stopOrder.username.equals(onlineUser)) {
                 iterator.remove();
                 updateOrderBook();
-                System.out.println("Stop Order " + orderID + " cancelled successfully.");
+                System.out.println("Stop Order " + orderID + " cancellato con successo.");
                 return 100;
             }
         }
@@ -419,7 +393,7 @@ public class OrderBook {
         if (!bidMap.isEmpty() && !askMap.isEmpty()){
             int maxBid = bidMap.firstKey(); 
             int minAsk = askMap.firstKey(); 
-            this.spread = minAsk - maxBid; // CORRETTO: spread = ask - bid (non bid - ask)
+            this.spread = minAsk - maxBid;
         } else if (bidMap.isEmpty() && !askMap.isEmpty()){
             this.spread = -1 * askMap.firstKey();
         } else if (!bidMap.isEmpty() && askMap.isEmpty()){
@@ -455,7 +429,6 @@ public class OrderBook {
         return totalSize;
     }
 
-    // CORRETTO: Tipi di ritorno corretti con 'Bookvalue' invece di 'BookValue'
     public ConcurrentSkipListMap<Integer,Bookvalue> getAskMap(){
         return this.askMap;
     }

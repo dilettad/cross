@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 
 import OrderBook.OrderBook;
 
+// Classe usata per definire un oggetto Json contenente l'OrderBook o gli StopOrders
 public class GsonOrderBook {
     String type;
     OrderBook orderBook;
@@ -15,7 +16,7 @@ public class GsonOrderBook {
         this.orderBook = orderBook;
     }
 
-    //Messaggio di risposta e invio sullo stream out 
+    //Serializzazione del messaggio di risposta e invio sullo stream out
     public void sendMessage(Gson gson, PrintWriter out){
         if("showOrderBook".equals(type)){
             // Creazione di un oggetto JSON personalizzato per l'OrderBook

@@ -1,5 +1,6 @@
 package Gson;
 
+// Classe usata per definire la struttura dei messaggi che il client invia al server
 public class GsonMessage <T extends Values> {
     public String operation;
     public T values;

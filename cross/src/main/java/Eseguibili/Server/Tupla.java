@@ -5,10 +5,12 @@ public class Tupla {
     public String password;
     public Boolean isLogged;
 
+    //Costruttore: crea una nuova tupla con password e stato di login iniziali
     public Tupla(String password, Boolean isLogged){
         this.password = password;
         this.isLogged = isLogged;
     }
+
     //Metodo per impostare lo stato di login
     public void setLogged(boolean isLogged){
         this.isLogged = isLogged;
@@ -27,7 +29,7 @@ public class Tupla {
     public String getPassword(){
         return this.password;
     }
-
+    //Metodo per rappresentare la tupla come stringa
     public String toString() {
         return "Password: " + this.password + ", IsLogged: " + this.isLogged;
     }

@@ -3,7 +3,6 @@ package Gson;
 import java.io.PrintWriter;
 
 import com.google.gson.Gson;
-//import Gson.Values;
 // Classe utilizzata per definire la struttura dei messaggi di risposta in seguito all'inserimento di un ordine
 public class GsonResponseOrder extends Values{
     public int orderID;

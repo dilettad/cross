@@ -1,36 +1,38 @@
 package Eseguibili.Client;
 
-// Importazione per la gestione coda e thread-safe
+// Importazione per la gestione coda concorrente thread-safe
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-// Classe responsabile della gestione della stampa dei messaggi in modo asincrono, usa una coda per gestire i messaggi e un thread per la stampa
+//Classe per la gestione della stampa dei messaggi in modo asincrono
 public class Printer {
-    //Coda che contine i messaggi da stampare
+    //Coda concorrente che conterrà i messaggi da stampare
     private final BlockingQueue<String> messageQueue =  new LinkedBlockingQueue<>();
-    //Thread dedicato che preleva e stampa i messaggi
+    //Thread dedicato che stampa i messaggi presi dalla coda
     private final Thread printerThread;
     //Garantisce la visibilità corretta tra thread diversi
     private volatile boolean readyToPrint = true;
 
-    //Costruttore: inizializza e avvia il thread di stampa
+    //Costruttore: crea e avvia il thread di stampa
     public Printer(){
+        //Inizializza il thread di stampa
         printerThread = new Thread(() -> {
                 try { 
-                    //
+                    // Ciclo di stampa: finchè thread non viene interrotto continua
                     while(!Thread.currentThread().isInterrupted()) {
-                        // Attende e rimuove un messaggio dalla coda, bloccando se necessario
+                        // Preleva il messaggio dalla coda (bloccato se vuota)
                         String message = messageQueue.take();
                         // Stampa il messaggio
                         System.out.println(message);
                         
-                        //Se non ci sono messaggi mostra il prompt 
+                        //Se non ci sono messaggi mostra il prompt all'utente
                         if (readyToPrint && messageQueue.isEmpty()) {
                             System.out.print("> ");
                             System.out.flush();
                         }
                     }
                 } catch (InterruptedException e) {
+                    // Gestione dell'interruzione del thread: se interrotto, esce dal ciclo 
                     Thread.currentThread().interrupt(); // Ripristina lo stato di interruzione
                 }
 
@@ -42,7 +44,7 @@ public class Printer {
     // Metodo per aggiungere un messaggio alla coda
     public void print(String message) {
             try {
-                messageQueue.put(message); // Aggiunge il messaggio alla coda, bloccando se necessario
+                messageQueue.put(message); // Aggiunge il messaggio alla coda, bloccando se necessario (put)
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Ripristina lo stato di interruzione
             }
@@ -68,15 +70,4 @@ public class Printer {
         printerThread.interrupt();
     }
 
-    /*  public static void main(String[] args) {
-        Printer printer = new Printer();
-        printer.start(); // Avvia il thread di stampa
-        printer.print("Printer funziona");
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            printer.shutdown();
-        }
-    }
-    */
 }

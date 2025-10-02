@@ -1,6 +1,6 @@
 package Gson;
-import Gson.Values;
 
+//Classe usata per passare al server i dati per inserire un LimitOrder o uno StopOrder
 public class GsonLimitStopOrder extends Values {
     public String type;
     public int size;

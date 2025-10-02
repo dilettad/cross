@@ -1,4 +1,5 @@
 package Gson;
+//Classe usata per passare al server i dati relativi alle operazioni di registrazione
 public class GsonUser extends Values{
    public String username;
    public String password;
