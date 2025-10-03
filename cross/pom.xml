@@ -1,92 +1,123 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <groupId>cross</groupId>
+    <artifactId>cross</artifactId>
+    <packaging>jar</packaging>
+    <version>1.0</version>
+    <name>CROSS</name>
 
-    <groupId>com.example</groupId>
-    <artifactId>CROSSProject</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
-
-    <properties>
-      <!--  <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target> -->
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <!-- ./mvnw versions:display-dependency-updates -->
+    <!-- ./mvnw versions:display-plugin-updates -->
 
     <dependencies>
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.10.1</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>6.0.0-M1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>4.0.0-beta-2</version>
+        </dependency>
+        <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.13.1</version>
         </dependency>
     </dependencies>
 
     <build>
+        <finalName>${jar.finalName}</finalName>
         <plugins>
-            <!-- Plugin per compilare il codice -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.1</version>
                 <configuration>
-                  <!--  <source>17</source> 
-                    <target>17</target> -->
-                    <release>17</release>
+                    <mainClass>${main.class}</mainClass>
                 </configuration>
             </plugin>
-
-           <!-- Plugin per JAR del server -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
+                <artifactId>maven-shade-plugin</artifactId>
                 <version>3.6.0</version>
                 <executions>
                     <execution>
-                        <id>make-client-jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <mainClass>Eseguibili.Main.MainClient</mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                            <finalName>cross-client</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <cleanup>true</cleanup>
-                        </configuration>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                    <configuration>
+                        <argLine>--enable-native-access=ALL-UNNAMED</argLine>
+                        <createDependencyReducedPom>false</createDependencyReducedPom>
+                        <shadedArtifactAttached>false</shadedArtifactAttached>
+                        <transformers>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <mainClass>${main.class}</mainClass>
+                        </transformer>
+                        </transformers>
+                    </configuration>
                     </execution>
-                     <execution>
-                        <id>make-server-jar</id>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
                         <phase>package</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <archive>
-                                <manifest>
-                                    <mainClass>Eseguibili.Main.MainServer</mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                            <finalName>cross-server</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <cleanup>true</cleanup>
+                            <target>
+                                <delete file="${project.build.directory}/original-${jar.finalName}.jar" />
+                                <delete dir="${project.build.directory}/maven-archiver" />
+                                <delete dir="${project.build.directory}/maven-status" />
+                                <delete dir="${project.build.directory}/generated-sources" />
+                                <delete dir="${project.build.directory}/antrun" />
+                            </target>
                         </configuration>
                     </execution>
                 </executions>
-
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>excluded-folder/**</exclude>
+                </excludes>
+            </resource>
+        </resources>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <excludes>
+                    <exclude>excluded-folder/**</exclude>
+                </excludes>
+            </testResource>
+        </testResources>
     </build>
+
+    <profiles>
+        <profile>
+            <id>client</id>
+            <properties>
+                <main.class>Eseguibili.Main.MainClient</main.class>
+                <jar.finalName>cross-client</jar.finalName>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>server</id>
+            <properties>
+                <main.class>Eseguibili.Main.MainServer</main.class>
+                <jar.finalName>cross-server</jar.finalName>
+            </properties>
+        </profile>
+    </profiles>
 </project>

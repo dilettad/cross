@@ -1,10 +1,10 @@
 {
   "Cate": {
-    "password": "corallo",
+    "password": "Corallo",
     "isLogged": false
   },
   "Rita": {
-    "password": "ciaoo",
+    "password": "Indaco",
     "isLogged": false
   },
   "daria": {
@@ -17,6 +17,10 @@
   },
   "Francesco": {
     "password": "ino",
+    "isLogged": false
+  },
+  "pin": {
+    "password": "o",
     "isLogged": false
   },
   "Erne": {
@@ -37,10 +41,6 @@
   },
   "diletta": {
     "password": "Ciao",
-    "isLogged": false
-  },
-  "fede": {
-    "password": "ciao",
     "isLogged": false
   }
 }

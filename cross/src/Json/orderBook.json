@@ -1,22 +1,32 @@
 {
   "askMap": {},
-  "spread": 0,
-  "lastOrderID": 8,
-  "stopOrders": [
-    {
-      "type": "ask",
-      "size": 450,
-      "username": "Cate",
-      "orderID": 7,
-      "stopPrice": 34677
+  "spread": 31,
+  "lastOrderID": 14,
+  "stopOrders": [],
+  "bidMap": {
+    "31": {
+      "size": 6,
+      "total": 186,
+      "userList": [
+        {
+          "size": 6,
+          "username": "pin",
+          "orderID": 14,
+          "date": "2025-10-02 16:29:34"
+        }
+      ]
     },
-    {
-      "type": "bid",
-      "size": 450,
-      "username": "Rita",
-      "orderID": 8,
-      "stopPrice": 34677
+    "30": {
+      "size": 1,
+      "total": 30,
+      "userList": [
+        {
+          "size": 1,
+          "username": "pin",
+          "orderID": 13,
+          "date": "2025-10-02 16:29:27"
+        }
+      ]
     }
-  ],
-  "bidMap": {}
+  }
 }

@@ -34,7 +34,6 @@ public class ReceiverClient implements Runnable{
             String line;
             // Ciclo di lettura dei messaggi
             while(!Thread.currentThread().isInterrupted() && !serverSock.isClosed() && !sharedData.isShuttingDown.get() && (line = in.readLine()) != null){
-
                 try {
                     // Si converte la stringa ricevuta in un oggetto JSON 
                     JsonObject obj = JsonParser.parseString(line).getAsJsonObject();
@@ -104,9 +103,10 @@ public class ReceiverClient implements Runnable{
                     printer.print("Login avvenuto con successo. Benvenuto");
                 } else{
                     sharedData.loginError.set(true);
-                    printer.print(errorMessage);
+                    printer.print("Login fallito, riprova. " + errorMessage);
                 }
                 break;
+                
             //Caso di aggiornamento credenziali
             case "updateCredentials":
                 if(errorMessage.equals("OK"))

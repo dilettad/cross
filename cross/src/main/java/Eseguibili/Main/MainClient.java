@@ -124,7 +124,7 @@ public class MainClient {
                         mes = new GsonMessage<>("logout", new Values()); // Creazione messaggio
                         message = gson.toJson(mes); // Creazione dell'oggetto Gson da mandare
                         out.println(message); // Invio del messaggio sullo stream
-                        
+                        //out.flush();
                         closeConnection();
                     }
                 }
@@ -198,8 +198,7 @@ public class MainClient {
                                     mes = new GsonMessage<>("login", new GsonUser(userName, password));
                                     message = gson.toJson(mes);
                                     out.println(message);
-
-                                    
+                                    /*
                                     while (!udpMessage) {
                                         // Messaggio mandato solo se l'utente si è loggato con successo
                                         if (sharedData.isLogged.get() == true) {
@@ -207,9 +206,21 @@ public class MainClient {
                                             udpMessage = true;
                                         }
                                         if (sharedData.loginError.get() == true){
-                                            printer.print("Login fallito. Riprova.");
                                             break;
                                         }
+                                    } */
+
+                                    while (!sharedData.isShuttingDown.get() && !sharedData.isClosed.get()) {
+                                        if (sharedData.isLogged.get() && sharedData.UDPport > 0) {
+                                            // Ora la porta UDP deve essere stata ricevuta via TCP
+                                                // Invia pacchetto UDP di handshake
+                                                sendUDPmessage(UDPsocket, printer, sharedData);
+                                                udpMessage = true;
+                                        
+                                            break; // Login completato
+                                        }
+                                        if (sharedData.loginError.get()) break; // Login fallito
+                                        Thread.sleep(50); // Evita busy-waiting
                                     }
                                 } else {
                                     printer.print("Formato non valido. Prova: login username password");
@@ -222,7 +233,14 @@ public class MainClient {
                                     mes = new GsonMessage<>("logout", new Values());
                                     message = gson.toJson(mes);
                                     out.println(message);
-                                    while (!sharedData.isClosed.get()) {}
+                                    out.flush();
+                                    
+                                   // while (!sharedData.isClosed.get()) {}
+                                    long start = System.currentTimeMillis();
+                                    //Se dopo 2 secondi non si è chiusa la connessione, forzo la chiusura
+                                        while (!sharedData.isClosed.get() && System.currentTimeMillis() - start < 2000) { 
+                                            Thread.sleep(50); //Pausa breve per evitare busy-waiting
+                                        }
                                     closeConnection();
                                     return;
                                 }

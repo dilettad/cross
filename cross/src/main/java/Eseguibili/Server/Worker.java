@@ -272,7 +272,7 @@ public class Worker implements Runnable {
                                                     response.sendMessage(gson,out);
 
                                                     // Si attende il pacchetto UDP dal client per estrarre porta e indirizzo
-                                                    byte[] buffer = new byte[1];
+                                                    byte[] buffer = new byte[1]; 
                                                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                                                     UDPsocket.receive(packet);
 
@@ -315,6 +315,7 @@ public class Worker implements Runnable {
                                         System.out.println("Utente non connesso ha richiesto il logout");
                                         response.setResponse("logout",101,"Chiusura connessione...");
                                         response.sendMessage(gson,out);
+                                        out.flush();
                                     } else {
                                         // L'utente è loggato
                                         System.out.println(onlineUser + " ha richiesto il logout");
@@ -328,6 +329,7 @@ public class Worker implements Runnable {
                                         // Comunicazione al client
                                         response.setResponse("logout",100,"OK");
                                         response.sendMessage(gson,out);
+                                        out.flush();
                                     } 
                                     // Terminazione del thread handler del timeout
                                     sharedState.runningHandler.set(false);
@@ -335,7 +337,7 @@ public class Worker implements Runnable {
 
                                     // Si rimuove il worker dalla lista di MainServer
                                     MainServer.workerList.remove(this);
-
+                                   
                                     // Chiusura comunicazione
                                     clientSocket.close();
                                     return;
