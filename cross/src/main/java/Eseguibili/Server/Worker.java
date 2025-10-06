@@ -796,8 +796,9 @@ public class Worker implements Runnable {
     //Metodo per modificare il file JSON che mostra l'orderBook
     public static void updateJsonOrderBook(OrderBook orderBook) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/Json/orderBook.json"))) {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            writer.write(gson.toJson(orderBook));
+            Gson g = new GsonBuilder().setPrettyPrinting().create();
+            writer.write(g.toJson(orderBook));
+            //writer.flush();
             //Sincro tutti i worker quando l'orderbook cambia
             for (Worker worker : MainServer.workerList) { 
                 if (worker != null && worker.handler != null){

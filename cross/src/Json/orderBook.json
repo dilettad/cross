@@ -1,32 +1,35 @@
 {
-  "askMap": {},
-  "spread": 31,
-  "lastOrderID": 14,
-  "stopOrders": [],
-  "bidMap": {
-    "31": {
-      "size": 6,
-      "total": 186,
+  "askMap": {
+    "58000": {
+      "size": 60,
+      "total": 3480000,
       "userList": [
         {
-          "size": 6,
-          "username": "pin",
-          "orderID": 14,
-          "date": "2025-10-02 16:29:34"
-        }
-      ]
-    },
-    "30": {
-      "size": 1,
-      "total": 30,
-      "userList": [
-        {
-          "size": 1,
-          "username": "pin",
-          "orderID": 13,
-          "date": "2025-10-02 16:29:27"
+          "size": 60,
+          "username": "Cate",
+          "orderID": 17,
+          "date": "2025-10-06 17:24:25"
         }
       ]
     }
-  }
+  },
+  "spread": -58000,
+  "lastOrderID": 20,
+  "stopOrders": [
+    {
+      "type": "ask",
+      "size": 5,
+      "username": "diletta",
+      "orderID": 19,
+      "stopPrice": 23
+    },
+    {
+      "type": "bid",
+      "size": 6,
+      "username": "Cate",
+      "orderID": 20,
+      "stopPrice": 580
+    }
+  ],
+  "bidMap": {}
 }

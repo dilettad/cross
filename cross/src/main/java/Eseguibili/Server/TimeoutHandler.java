@@ -58,7 +58,7 @@ public class TimeoutHandler implements Runnable {
         updateStopOrders(orderBook.stopOrders);
     }
 
-    @Override
+    //@Override
     //Metodo principale che monitora l'attività del client
     public void run(){
         //Ciclo infinito finché il handler è attivo

@@ -2,6 +2,7 @@ package OrderBook;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Map;
@@ -30,9 +31,26 @@ public class OrderBook {
 
 
     public void notifyUser(ConcurrentSkipListMap<String, SockMapValue> socketMap, String user, int orderID, String type, String orderType, int size, int price) {
-        System.out.println("Notifica all'utente " + user + " riguardo l'ordine " + orderID + ", di tipo: " + type + ", Tipo d'ordine: " + orderType + ", Dimensione: " + size + ", Prezzo: " + price);
-        
-        // Estrazione delle informazioni socket dell'utente
+        System.out.println("Notifica all'utente " + user);
+        // Estrazione della porta dell'utente a cui mandare la notifica dalla socketMap
+        int port = 0;
+        InetAddress address = null;
+        for(Map.Entry<String,SockMapValue> entry : socketMap.entrySet()){
+            if(entry.getKey().equals(user)){
+                port = entry.getValue().port;
+                address = entry.getValue().address;
+                break;
+            }
+        }
+        if(port != 0 && address != null){
+            try (DatagramSocket sock = new DatagramSocket()){
+                Trade trade = new Trade(orderID, type, orderType, size, price);
+                Gson gson = new Gson();
+                String json = gson.toJson(trade);   
+                byte[] data = json.getBytes(StandardCharsets.UTF_8);
+                DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
+                sock.send(packet);
+        /* Estrazione delle informazioni socket dell'utente
         SockMapValue socketInfo = socketMap.get(user);
         
         if(socketInfo != null){
@@ -48,7 +66,7 @@ public class OrderBook {
                 DatagramPacket packet = new DatagramPacket(data, data.length, socketInfo.address, socketInfo.port);
                 // Invio del pacchetto
                 sock.send(packet);
-
+            */
             } catch (Exception e){
                 System.err.println("NotifyUser() Errore: " + e.getMessage());
             }
@@ -66,14 +84,63 @@ public class OrderBook {
         return users;
     }
 
-    //Metodo per controllare tutti gli stopOrder per verificare se qualcuno di essi debba essere eseguito in base ai prezzi di mercato correnti
+    public synchronized void checkStopOrders(ConcurrentSkipListMap<String,SockMapValue> socketMap){
+        Iterator<StopValue> iterator = stopOrders.iterator();
+        while(iterator.hasNext()){
+            StopValue order = iterator.next();
+
+            if(order.type.equals("ask")){ // Controllo della bidMap
+                if(!bidMap.isEmpty()){
+                    if(order.stopPrice <= bidMap.firstKey()){ //raggiunto stopPrice: esecuzione dell'ordine come un MarketOrder
+                        // Si verifica che la lista della bidmap non contenga solo ordini inseriti dall'utente dello stopOrder
+                        ConcurrentLinkedQueue<String> list = getUsers(bidMap.get(bidMap.firstKey()).userList);
+                        if(list.stream().anyMatch(s -> !s.equals(order.username))){
+
+                            int res = tryMarketOrder(order.type,order.size,order.username,"stop", socketMap);
+                            lastOrderID--; // Si decrementa lastOrderID perchè si ha già un orderID per lo stopOrder
+                            if(res != -1){// L'ordine è stato elaborato con successo
+                                System.out.printf("%s's StopOrder processato con successo. Ordine: %s\n",order.username, order.toString());
+                            } else{
+                                System.out.printf("%s's StopOrder è stato elaborato ma ha fallito. Ordine: %s\n",order.username, order.toString());
+
+                                notifyUser(socketMap, order.username, order.orderID, order.type, "stop", 0, 0);
+                            }
+                            iterator.remove();
+                        }
+                    }
+                }
+            } else{ // Controllo della askMap
+                if(!askMap.isEmpty()){
+                    if(order.stopPrice >= askMap.firstKey()){ //raggiunto stopPrice: esecuzione dell'ordine come un MarketOrder
+                        // Si verifica che la lista della askmap non contenga solo ordini inseriti dall'utente dello stopOrder
+                        ConcurrentLinkedQueue<String> list = getUsers(askMap.get(askMap.firstKey()).userList);
+                        if(list.stream().anyMatch(s -> !s.equals(order.username))){
+
+                            int res = tryMarketOrder(order.type,order.size,order.username,"stop", socketMap);
+                            lastOrderID--; // Si decrementa lastOrderID perchè si ha già un orderID per lo stopOrder
+                            if(res != -1){// L'ordine è stato elaborato con successo
+                                System.out.printf("%s's StopOrder processato con successo. Ordine: %s\n",order.username, order.toString());
+                            } else{
+                                System.out.printf("%s's StopOrder è stato elaborato ma ha fallito. Ordine: %s\n",order.username, order.toString());
+
+                                notifyUser(socketMap, order.username, order.orderID, order.type, "stop", 0, 0);
+                            }
+                            iterator.remove();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /*Metodo per controllare tutti gli stopOrder per verificare se qualcuno di essi debba essere eseguito in base ai prezzi di mercato correnti
     public synchronized void checkStopOrders(ConcurrentSkipListMap<String, SockMapValue> socketMap) {
         Iterator<StopValue> iterator = stopOrders.iterator();
 
         while (iterator.hasNext()) {
             StopValue order = iterator.next();
-            boolean triggerCondition = false;
-            ConcurrentLinkedQueue<String> userList = null;
+            //boolean triggerCondition = false;
+            //ConcurrentLinkedQueue<String> userList = null;
 
             if (order.type.equals("ask")) {
                 if (!bidMap.isEmpty()) {
@@ -105,29 +172,12 @@ public class OrderBook {
                 }
 
                 iterator.remove();
+                
             }
         }
     }
-
-    // Aggiunto metodo tryMarketOrder mancante
-    public synchronized int tryMarketOrder(String type, int size, String username, String orderType, ConcurrentSkipListMap<String, SockMapValue> socketMap) {
-        if ("bid".equals(type)) {
-            // Market order di acquisto - prende il miglior prezzo ask disponibile
-            if (!askMap.isEmpty()) {
-                int bestAskPrice = askMap.firstKey();
-                return tryBidOrder(size, bestAskPrice, username, socketMap);
-            }
-        } else if ("ask".equals(type)) {
-            // Market order di vendita - prende il miglior prezzo bid disponibile
-            if (!bidMap.isEmpty()) {
-                int bestBidPrice = bidMap.firstKey();
-                return tryAskOrder(size, bestBidPrice, username, socketMap);
-            }
-        }
-        return -1; // Ordine fallito
-    }
-
-    public synchronized void loadBidOrder(int size, int price, String user, int orderID) {
+*/
+public synchronized void loadBidOrder(int size, int price, String user, int orderID) {
         UserBook newuser = new UserBook(size, user, orderID);
         //Se prezzo già esiste
         if (bidMap.containsKey(price)) { 
@@ -155,34 +205,15 @@ public class OrderBook {
             Bookvalue askValue = entry.getValue();
 
             if (askPrice <= price) { // Se il prezzo di vendita è inferiore o uguale al prezzo di acquisto
-                int matchedSize = Math.min(remainingSize, askValue.size); 
-                remainingSize -= matchedSize;
-
-                // Notifica gli utenti coinvolti
-                for (UserBook userBook : askValue.userList) {
-                    notifyUser(socketMap, userBook.username, orderID, "bid", "limit", matchedSize, askPrice);
-                }
-
-                // Rimuove l'ordine dalla askMap se completamente soddisfatto
-                if (askValue.size == matchedSize) {
-                    askMap.remove(askPrice);
-                } else {
-                    // Aggiorna la size dell'ordine nella askMap
-                    askValue.size -= matchedSize;
-                    askValue.total -= matchedSize * askPrice;
-                    askValue.userList.removeIf(u -> u.username.equals(user));
-                    askMap.put(askPrice, askValue);
-                }
-
-                if (remainingSize == 0) { //Ordine completato
-                    System.out.println("Numero d'ordine " + orderID + " completato.");
-                    updateOrderBook();
-                    return orderID;
-                }
+              //  int matchedSize = Math.min(remainingSize, askValue.size); 
+                remainingSize = tryMatch(remainingSize, user, "bid", askValue.userList, "ask", "limit", askPrice, orderID, socketMap);
+            }
+            if (remainingSize == 0){ //Ordine completato
+                System.out.println("Numero d'ordine " + orderID + " completato.");
+                updateOrderBook();
+                return orderID; 
             }
         }
-        
-    
         if (remainingSize > 0) {
             loadBidOrder(remainingSize, price, user, orderID);
             if (remainingSize == size) {
@@ -224,44 +255,30 @@ public class OrderBook {
             Bookvalue bidValue = entry.getValue();
 
             if (bidPrice >= price) { // Se il prezzo di acquisto è superiore o uguale al prezzo di vendita
-                int matchedSize = Math.min(remainingSize, bidValue.size);
-                remainingSize -= matchedSize;
-
-                // Notifica gli utenti coinvolti
-                for (UserBook userBook : bidValue.userList) {
-                    notifyUser(socketMap, userBook.username, orderID, "ask", "limit", matchedSize, bidPrice);
-                }
-
-                // Rimuove l'ordine dalla bidMap se completamente soddisfatto
-                if (bidValue.size == matchedSize) {
-                    bidMap.remove(bidPrice);
-                } else {
-                    // Aggiorna la size dell'ordine nella bidMap
-                    bidValue.size -= matchedSize;
-                    bidValue.total -= matchedSize * bidPrice;
-                    bidValue.userList.removeIf(u -> u.username.equals(user));
-                    bidMap.put(bidPrice, bidValue);
-                }
-
-                if (remainingSize == 0) { //Ordine completato
+                remainingSize = tryMatch(remainingSize, user, "ask", bidValue.userList, "bid", "limit", bidPrice, orderID, socketMap);
+            }    
+                if(remainingSize == 0){ //Ordine completato
                     System.out.println("Numero d'ordine " + orderID + " completato.");
                     updateOrderBook();
                     return orderID; 
+                }               
+            }
+            // L'ordine non è stato evaso completamente: deve essere caricato sull'orderBook
+            if(remainingSize > 0){
+                loadAskOrder(remainingSize, price, user, orderID);
+                if(remainingSize == size){
+                    // L'ordine non è stato matchato
+                    System.out.println("Numero d'ordine "+ orderID + " non corrispondente: " + remainingSize + " aggiunto all'orderBook");
+                } else{
+                    // L'ordine è stato evaso parzialmente
+                    System.out.println("Numero d'ordine "+ orderID + " è stato parzialmente completato; la dimensione rimanente di " + remainingSize + " è stata aggiunta all'orderBook");
                 }
             }
-        }
-        
-        if (remainingSize > 0) {
-            loadAskOrder(remainingSize, price, user, orderID);
-            if (remainingSize == size) {
-                System.out.println("Numero d'ordine " + orderID + " non corrispondente: " + remainingSize + " inserito all'orderBook");
-            } else {
-                System.out.println("Numero d'ordine " + orderID + " è stato parzialmente completato; la dimensione rimanente di " + remainingSize + " è stata aggiunta all'orderBook");
-            }
-        }
-        updateOrderBook();
-        return orderID;
+            updateOrderBook();
+            return orderID;
     }
+        
+ 
     
     //Algoritmo per eseguire il matching tra ordini ask-bid
     public synchronized int tryMatch(int remainingSize, String user, String userType, ConcurrentLinkedQueue<UserBook> list, String listType, String orderType, int price, int orderID, ConcurrentSkipListMap<String, SockMapValue> socketMap) {
@@ -281,20 +298,65 @@ public class OrderBook {
                     notifyUser(socketMap, user, orderID, userType, orderType, IUser.size, price);
                     iterator.remove();
                 } else { // IUser.size == remainingSize
+                    iterator.remove();
                     notifyUser(socketMap, IUser.username, IUser.orderID, listType, "limit", IUser.size, price);
                     notifyUser(socketMap, user, orderID, userType, orderType, remainingSize, price);
-                    iterator.remove();
+                    
                     remainingSize = 0;
                 }
-            } else {
-                iterator.remove();
-                notifyUser(socketMap, IUser.username, IUser.orderID, listType, "limit", IUser.size, price);
-                notifyUser(socketMap, user, orderID, userType, orderType, remainingSize, price);
-                remainingSize = 0;
             }
         }
         return remainingSize;
     }
+
+public synchronized int tryMarketOrder(String type, int size, String user, String orderType ,ConcurrentSkipListMap<String,SockMapValue> socketMap){
+        int remainingSize = size;
+        
+        if(type.equals("ask")){ // Ricevuto ask: bisogna matchare con bid
+            
+            // Si controlla se la mappa contiene abbastanza size per soddisfare l'ordine (escludendo la size degli ordini inseriti dall'utente che ha fatto il marketOrder)
+            if(totalMapSize(bidMap)-totalUserSize(bidMap, user) < size){
+                return -1;
+            }
+
+            int orderID = updateLastOrderID();
+            
+            for(Map.Entry<Integer, Bookvalue> entry : bidMap.entrySet()){ // Scorrimento della bidMap
+                int price = entry.getKey();
+                Bookvalue value = entry.getValue();
+                
+                remainingSize = tryMatch(remainingSize,user,"ask",value.userList,"bid",orderType,price,orderID,socketMap);
+
+                if(remainingSize == 0){// Ordine completato
+                    updateOrderBook();
+                    return orderID; // Viene restituito il numero dell'ordine
+                }
+            }
+
+        } else{ // Ricevuto bid: bisogna matchare con ask
+
+            // Si controlla se la mappa contiene abbastanza size per soddisfare l'ordine (escludendo la size degli ordini inseriti dall'utente che ha fatto il marketOrder)
+            if(totalMapSize(askMap)-totalUserSize(askMap, user) < size){
+                return -1;
+            }
+
+            int orderID = updateLastOrderID();
+            
+            for(Map.Entry<Integer, Bookvalue> entry : askMap.entrySet()){ // Scorrimento della askMap
+                int price = entry.getKey();
+                Bookvalue value = entry.getValue();
+                
+                remainingSize = tryMatch(remainingSize,user,"bid",value.userList,"ask",orderType,price,orderID,socketMap);
+
+                if(remainingSize == 0){// Ordine completato
+                    updateOrderBook();
+                    return orderID; // Viene restituito il numero dell'ordine
+                }
+            }
+        }
+        return -1;
+    }
+
 
     //Metodo per cancellare un ordine, restituisce 100 se l'ordine è stato eliminato correttamente else 101
     public synchronized int cancelOrder(int orderID, String onlineUser) {
@@ -393,7 +455,7 @@ public class OrderBook {
         if (!bidMap.isEmpty() && !askMap.isEmpty()){
             int maxBid = bidMap.firstKey(); 
             int minAsk = askMap.firstKey(); 
-            this.spread = minAsk - maxBid;
+            this.spread = maxBid - minAsk;
         } else if (bidMap.isEmpty() && !askMap.isEmpty()){
             this.spread = -1 * askMap.firstKey();
         } else if (!bidMap.isEmpty() && askMap.isEmpty()){
