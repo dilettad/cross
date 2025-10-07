@@ -103,7 +103,7 @@ public class ReceiverClient implements Runnable{
                     printer.print("Login avvenuto con successo. Benvenuto");
                 } else{
                     sharedData.loginError.set(true);
-                    printer.print("Login fallito, riprova. " + errorMessage);
+                    printer.print( errorMessage);   
                 }
                 break;
                 

@@ -1,35 +1,7 @@
 {
-  "askMap": {
-    "58000": {
-      "size": 60,
-      "total": 3480000,
-      "userList": [
-        {
-          "size": 60,
-          "username": "Cate",
-          "orderID": 17,
-          "date": "2025-10-06 17:24:25"
-        }
-      ]
-    }
-  },
-  "spread": -58000,
-  "lastOrderID": 20,
-  "stopOrders": [
-    {
-      "type": "ask",
-      "size": 5,
-      "username": "diletta",
-      "orderID": 19,
-      "stopPrice": 23
-    },
-    {
-      "type": "bid",
-      "size": 6,
-      "username": "Cate",
-      "orderID": 20,
-      "stopPrice": 580
-    }
-  ],
+  "askMap": {},
+  "spread": 0,
+  "lastOrderID": 26,
+  "stopOrders": [],
   "bidMap": {}
 }
