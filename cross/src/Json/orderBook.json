@@ -1,7 +1,20 @@
 {
-  "askMap": {},
-  "spread": 0,
-  "lastOrderID": 26,
+  "askMap": {
+    "56000": {
+      "size": 1,
+      "total": 56000,
+      "userList": [
+        {
+          "size": 1,
+          "username": "Tommaso",
+          "orderID": 34,
+          "date": "2025-10-08 16:21:27"
+        }
+      ]
+    }
+  },
+  "spread": -56000,
+  "lastOrderID": 35,
   "stopOrders": [],
   "bidMap": {}
 }

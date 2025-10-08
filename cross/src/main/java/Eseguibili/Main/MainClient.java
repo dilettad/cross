@@ -192,13 +192,15 @@ public class MainClient {
 
                             // Comando login
                             case "login":
+                            sharedData.isLogged.set(false);
+                            sharedData.loginError.set(false);
                                 if (tokens.length == 3) {
                                     userName = tokens[1].trim();
                                     password = tokens[2].trim();
                                     mes = new GsonMessage<>("login", new GsonUser(userName, password));
                                     message = gson.toJson(mes);
                                     out.println(message);
-                                    /*
+                                    
                                     while (!udpMessage) {
                                         // Messaggio mandato solo se l'utente si è loggato con successo
                                         if (sharedData.isLogged.get() == true) {
@@ -208,20 +210,7 @@ public class MainClient {
                                         if (sharedData.loginError.get() == true){
                                             break;
                                         }
-                                    } */
-
-                                    while (!sharedData.isShuttingDown.get() && !sharedData.isClosed.get()) {
-                                        if (sharedData.isLogged.get() && sharedData.UDPport > 0) {
-                                            // Ora la porta UDP deve essere stata ricevuta via TCP
-                                                // Invia pacchetto UDP di handshake
-                                                sendUDPmessage(UDPsocket, printer, sharedData);
-                                                udpMessage = true;
-                                        
-                                            break; // Login completato
-                                        }
-                                        if (sharedData.loginError.get()) break; // Login fallito
-                                        Thread.sleep(50); // Evita busy-waiting
-                                    }
+                                    } 
                                 } else {
                                     printer.print("Formato non valido. Prova: login username password");
                                 }
